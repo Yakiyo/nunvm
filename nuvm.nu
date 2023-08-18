@@ -22,9 +22,9 @@ def nuvm [
 def "nuvm install" [
   version: string # The version to install
 ] {
-  let version = _prepend_version $version
-  let url = _make_url $version
-  let archive_path = (_nuvm_home | path join $"(_file_name $version)")
+  let version = _nuvm_prepend_version $version
+  let url = _nuvm_make_url $version
+  let archive_path = (_nuvm_home | path join $"(_nuvm_file_name $version)")
   log info $"Downloading archive from ($url)"
   log info $"Saving file to ($archive_path)"
   http get -r $url | save -r -f -p $archive_path
@@ -63,12 +63,12 @@ def _nuvm_fmt_version [it] {
 }
 
 # get platform
-def _get_os [] {
+def _nuvm_get_os [] {
   $nu.os-info | get name | str downcase
 }
 
 # get architecture
-def _get_arch [] {
+def _nuvm_get_arch [] {
   let host_arch: string = ($env.NUVM_ARCH? | default ($nu.os-info | get arch | str downcase))
   #FIXME: this is wanky, need to check i*86, not i86
   match $host_arch {
@@ -79,7 +79,7 @@ def _get_arch [] {
 }
 
 # appropiate file name for each platform
-def _file_name [version: string] {
+def _nuvm_file_name [version: string] {
   mut fname = ""
   if (_get_os | str contains "windows") {
     $fname = $"node-($version | str downcase)-win-(_get_arch).zip"
@@ -90,17 +90,17 @@ def _file_name [version: string] {
 }
 
 # form url to download from
-def _make_url [version: string] {
+def _nuvm_make_url [version: string] {
   $"($node_dist)/($version)/(_file_name $version)"
 }
 
 # throw an error
-def _throw [error: string] {
+def _nuvm_throw [error: string] {
   error make --unspanned { msg: $"(ansi red_bold)($error)(ansi reset)" }
 }
 
 # lowercase version and if does not start with `v`, add it
-def _prepend_version [version: string] {
+def _nuvm_prepend_version [version: string] {
   let version = ($version | str downcase)
   if not ($version | str starts-with "v") {
     $"v($version)"
