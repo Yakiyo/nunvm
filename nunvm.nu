@@ -36,6 +36,9 @@ def "nunvm install" [
       _nunvm_throw $"($version) is not a valid string"
     }
     $v = (_nunvm_prepend_version $"($version)")
+  } else if ([$env.PWD ".nvmrc"] | path join | path exists) {
+    $v = (_nunvm_read_rc)
+    log info $"Using version (ansi blue)($v)(ansi reset) from .nvmrc"
   } else {
     _nunvm_throw "Only one of `version`, `--lts` and `--latest` must be used at a time"
   }
@@ -113,22 +116,31 @@ def _nunvm_get_arch [] {
 # appropiate file name for each platform
 def _nunvm_file_name [version: string] {
   mut fname = ""
-  if (_get_os | str contains "windows") {
-    $fname = $"node-($version | str downcase)-win-(_get_arch).zip"
+  if (_nunvm_get_os | str contains "windows") {
+    $fname = $"node-($version | str downcase)-win-(_nunvm_get_arch).zip"
   } else {
-    $fname = $"node-($version | str downcase)-(_get_os)-(_get_arch).tar.gz"
+    $fname = $"node-($version | str downcase)-(_nunvm_get_os)-(_nunvm_get_arch).tar.gz"
   }
   echo $fname
 }
 
 # form url to download from
 def _nunvm_make_url [version: string] {
-  $"($node_dist)/($version)/(_file_name $version)"
+  $"($node_dist)/($version)/(_nunvm_file_name $version)"
 }
 
 # throw an error
 def _nunvm_throw [error: string] {
   error make --unspanned { msg: $"(ansi red_bold)($error)(ansi reset)" }
+}
+
+# read `.nvmrc` from current dir
+def _nunvm_read_rc [] {
+  let v = ([$env.PWD ".nvmrc"] | path join | open | str trim)
+  if not (_nunvm_is_valid_version $v) {
+    _nunvm_throw $".nvmrc contains ($v), which is not a valid version string"
+  }
+  $v
 }
 
 # lowercase version and if does not start with `v`, add it
@@ -163,7 +175,7 @@ def _nunvm_unarchive [
   archive_path: string
   dest_path: string
 ] {
-  match $"(_get_os)" {
+  match $"(_nunvm_get_os)" {
     "windows" => {
       powershell -Command $"\"Expand-Archive '($archive_path)' -DestinationPath ($dest_path) -Force\""
     }
