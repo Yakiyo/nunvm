@@ -50,9 +50,17 @@ def "nuvm ls" [] {
 
 # View all available versions of nodejs
 def "nuvm ls-remote" [] {
-  http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| $it.version }
+  http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| _nuvm_fmt_version $it }
 }
 
+# format a version string
+def _nuvm_fmt_version [it] {
+  mut s: string = $it.version
+  if $it.lts != false {
+    $s = $"($s) \(($it.lts)\)"
+  }
+  $s
+}
 
 # get platform
 def _get_os [] {
