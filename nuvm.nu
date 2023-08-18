@@ -20,8 +20,7 @@ def nuvm [
 
 # Install a version of nodejs
 def "nuvm install" [
-  version: string
-  --nuvm-dir?: string
+  version: string # The version to install
 ] {
   let version = _prepend_version $version
   let url = _make_url $version
@@ -120,7 +119,7 @@ def _nuvm_current [] {
 # unarchive zip files using platform specific tools
 # for windows use powershell's Expand-Archive func, for others
 # use tar
-def _unarchive [
+def _nuvm_unarchive [
   archive_path: string
   dest_path: string
 ] {
@@ -132,4 +131,14 @@ def _unarchive [
       tar xf $archive_path --directory=($dest_path)
     }
   }
+}
+
+# Get lts version
+def _nuvm_get_lts [] {
+  http get 'https://nodejs.org/dist/index.json' | where { |x| $x.lts != false } | get 0.version
+}
+
+# Get latest version
+def _nuvm_get_latest [] {
+  http get 'https://nodejs.org/dist/index.json' | get 0.version
 }
