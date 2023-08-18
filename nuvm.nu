@@ -25,8 +25,10 @@ def "nuvm install" [
 ] {
   let version = _prepend_version $version
   let url = _make_url $version
-  log info $"Downloading archive from ($url)..."
-  http get -r $url | save -r -f -p node.zip 
+  let archive_path = (_nuvm_home | path join $"(_file_name $version)")
+  log info $"Downloading archive from ($url)"
+  log info $"Saving file to ($archive_path)"
+  http get -r $url | save -r -f -p $archive_path
 }
 
 # View version of currently active nodejs
@@ -36,6 +38,15 @@ def "nuvm current" [] {
   } else {
     node -v
   }
+}
+# View all installed versions of nodejs
+def "nuvm ls" [] {
+  let installations = _nuvm_installations
+  if not ($installations | path exists) {
+    print "No version of nodejs installed"
+    return
+  }
+  ls -s $installations | select name | each { |it| $it.name }
 }
 
 # View all available versions of nodejs
@@ -91,14 +102,34 @@ def _prepend_version [version: string] {
   }
 }
 
+# Path to nuvm home. Use `NUVM_DIR` env or default to `~/.nuvm`
 def _nuvm_home [] {
   $env.NUVM_DIR? | default ($nu.home-path | path join ".nuvm")
 }
 
+# $nuvm_home/installations
 def _nuvm_installations [] {
   _nuvm_home | path join "installations"
 }
 
+# Where to store the current version. Use `NUVM_CURRENT` or default to `$nuvm_home/current`
 def _nuvm_current [] {
-  $env.NUVM_CURRENT
+  $env.NUVM_CURRENT? | default (_nuvm_home | path join "current")
+}
+
+# unarchive zip files using platform specific tools
+# for windows use powershell's Expand-Archive func, for others
+# use tar
+def _unarchive [
+  archive_path: string
+  dest_path: string
+] {
+  match $"(_get_os)" {
+    "windows" => {
+      powershell -Command $"\"Expand-Archive '($archive_path)' -DestinationPath ($dest_path) -Force\""
+    }
+    _ => {
+      tar xf $archive_path --directory=($dest_path)
+    }
+  }
 }
