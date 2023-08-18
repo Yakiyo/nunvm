@@ -12,6 +12,17 @@ module _utils {
   export def get_arch [] {
     $nu.os-info | get arch
   }
+
+  # appropiate file name for each platform
+  export def file_name [version: string] {
+    mut fname = ""
+    if get_os == "windows" {
+      fname = $"node-$($version | str downcase)-win-(get_arch).zip"
+      print $fname
+    }
+    print $fname
+    echo $fname
+  }
 }
 
 use _utils
@@ -27,7 +38,10 @@ def nuvm [
 }
 
 # Install a version of nodejs
-def "nuvm install" [] {
+def "nuvm install" [
+  version: string
+] {
+  _utils file_name $version | print
   print "TODO!"
 }
 
