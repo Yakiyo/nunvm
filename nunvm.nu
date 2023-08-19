@@ -12,6 +12,7 @@ use std log
 # nunvm version
 const nunvm_version = "0.1.0" 
 
+# Nodejs dist url
 const node_dist = "https://nodejs.org/dist"
 
 # Entry point
@@ -160,9 +161,9 @@ def _nunvm_prepend_version [version: string] {
   }
 }
 
-# Path to nunvm home. Use `nunvm_DIR` env or default to `~/.nunvm`
+# Path to nunvm home. Use `NUNVM_DIR` env or default to `~/.nunvm`
 def _nunvm_home [] {
-  $env.nunvm_DIR? | default ($nu.home-path | path join ".nunvm")
+  $env.NUNVM_DIR? | default ($nu.home-path | path join ".nunvm")
 }
 
 # $nunvm_home/installations
@@ -170,9 +171,9 @@ def _nunvm_installations [] {
   _nunvm_home | path join "installations"
 }
 
-# Where to store the current version. Use `nunvm_CURRENT` or default to `$nunvm_home/current`
+# Where to store the current version. Use `NUNVM_CURRENT` or default to `$nunvm_home/current`
 def _nunvm_current [] {
-  $env.nunvm_CURRENT? | default (_nunvm_home | path join "current")
+  $env.NUNVM_CURRENT? | default (_nunvm_home | path join "current")
 }
 
 # unarchive zip files using platform specific tools
