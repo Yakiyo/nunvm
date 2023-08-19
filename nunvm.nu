@@ -66,7 +66,8 @@ def "nunvm install" [
   http get -r $url | save -r -f -p $archive_path
 
   log info "Extracting file from archive"
-  _nunvm_unarchive $archive_path (_nunvm_installations | path join $version)
+  _nunvm_unarchive $archive_path (_nunvm_installations)
+  mv (_nunvm_installations | path join (_nunvm_file_name $version)) (_nunvm_installations | path join $version)
 
   log info "Removing archive file"
   try { 
@@ -128,6 +129,9 @@ def "nunvm alias" [
   if not (_nunvm_installations | path join $version | path exists) {
     _nunvm_throw "E_VERSION_NOT_INSTALLED" $"($version) is not installed. Cannot alias to it"
   }
+  let alias_map = (_nunvm_alias | open)
+  print $alias_map
+  # let aliases = (get $alias_map.($version))
 }
 
 # format a version string
@@ -210,6 +214,18 @@ def _nunvm_installations [] {
 # Where to store the current version. Use `NUNVM_CURRENT` or default to `$nunvm_home/current`
 def _nunvm_current [] {
   $env.NUNVM_CURRENT? | default (_nunvm_home | path join "current")
+}
+
+# json file containing info about aliases
+def _nunvm_alias [] {
+  let p = ([(_nunvm_home) "alias.json"] | path join)
+  # Create parent dir first
+  let dir = ($p | path dirname)
+  mkdir $dir
+  # then create file
+  touch $p
+  "[]" | save -f $p
+  $p
 }
 
 # unarchive zip files using platform specific tools
