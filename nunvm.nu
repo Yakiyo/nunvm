@@ -67,6 +67,8 @@ def "nunvm install" [
 
   log info "Extracting file from archive"
   _nunvm_unarchive $archive_path (_nunvm_installations)
+  print (_nunvm_installations | path join (_nunvm_file_name $version))
+  print (_nunvm_installations | path join $version)
   mv (_nunvm_installations | path join (_nunvm_file_name $version)) (_nunvm_installations | path join $version)
 
   log info "Removing archive file"
