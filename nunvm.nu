@@ -31,8 +31,8 @@ def nunvm [
 # Install a version of nodejs
 def "nunvm install" [
   version?: string # The version to install
-  --lts # Install lts version
-  --latest # Install latest version
+  --lts            # Install lts version
+  --latest         # Install latest version
 ] {
   # resolve version
   mut v = ""
@@ -44,14 +44,14 @@ def "nunvm install" [
     log info $"Resolving version lts to (ansi blue)($v)(ansi reset)"
   } else if $version != null and $lts == false and $latest == false {
     if not (_nunvm_is_valid_version $version) {
-      _nunvm_throw $"($version) is not a valid string"
+      _nunvm_throw "E_INVALID_VERSION" $"($version) is not a valid string"
     }
     $v = (_nunvm_prepend_version $"($version)")
   } else if ([$env.PWD ".nvmrc"] | path join | path exists) {
     $v = (_nunvm_read_rc)
     log info $"Using version (ansi blue)($v)(ansi reset) from .nvmrc"
   } else {
-    _nunvm_throw "Only one of `version`, `--lts` and `--latest` must be used at a time"
+    _nunvm_throw "E_TOO_MANY_ARGS" "Only one of `version`, `--lts` and `--latest` must be used at a time"
   }
 
   let version = $v
@@ -59,7 +59,7 @@ def "nunvm install" [
   let archive_path = (_nunvm_home | path join $"(_nunvm_file_name $version)")
   let version_path = (_nunvm_installations | path join $version)
   if ($version_path | path exists) {
-    _nunvm_throw $"Nodejs version ($version) already exists. Consider uninstalling it before installing it again"
+    _nunvm_throw "E_EXISTING_VERSION" $"Nodejs version ($version) already exists. Consider uninstalling it before installing it again"
   }
   log info $"Downloading archive from ($url)"
   log info $"Saving file to ($archive_path)"
@@ -78,16 +78,18 @@ def "nunvm install" [
 }
 
 # Uninstall a nodejs version
-def "nunvm uninstall" [version: string] {
+def "nunvm uninstall" [
+  version: string # Version to uninstall
+  ] {
   if not (_nunvm_is_valid_version $version) {
-    _nunvm_throw $"($version) is not a valid version string"
+    _nunvm_throw "E_INVALID_VERSION" $"($version) is not a valid version string"
   }
   let version = (_nunvm_prepend_version $version)
   let p = (_nunvm_installations | path join $version)
   if not ($p | path exists) {
-    _nunvm_throw $"($version) is not installed. Cannot uninstall it"
+    _nunvm_throw "E_VERSION_NOT_INSTALLED" $"($version) is not installed. Cannot uninstall it"
   }
-  try { rm -rf $p } catch { _nunvm_throw "Unable to remove installated version" }
+  try { rm -rf $p } catch { _nunvm_throw "E_EXT_ERROR" "Unable to remove installated version" }
   print "Succesfully removed installation"
 }
 
@@ -112,6 +114,20 @@ def "nunvm ls" [] {
 # View all available versions of nodejs
 def "nunvm ls-remote" [] {
   http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| _nunvm_fmt_version $it }
+}
+
+# Create an alias
+def "nunvm alias" [
+  version: string # The version to alias
+  alias: string   # Alias name
+] {
+  if not (_nunvm_is_valid_version $version) {
+    _nunvm_throw "E_INVALID_VERSION" $"($version) is not a valid version string"
+  }
+  let version = _nunvm_prepend_version $version
+  if not (_nunvm_installations | path join $version | path exists) {
+    _nunvm_throw "E_VERSION_NOT_INSTALLED" $"($version) is not installed. Cannot alias to it"
+  }
 }
 
 # format a version string
@@ -156,15 +172,17 @@ def _nunvm_make_url [version: string] {
 }
 
 # throw an error
-def _nunvm_throw [error: string] {
-  error make --unspanned { msg: $"(ansi red_bold)($error)(ansi reset)" }
+def _nunvm_throw [tag: string, error: string] {
+  error make --unspanned { 
+    msg: $"(ansi red_bold)($tag)(ansi reset)\n($error)"
+  }
 }
 
 # read `.nvmrc` from current dir
 def _nunvm_read_rc [] {
   let v = ([$env.PWD ".nvmrc"] | path join | open | str trim)
   if not (_nunvm_is_valid_version $v) {
-    _nunvm_throw $".nvmrc contains ($v), which is not a valid version string"
+    _nunvm_throw "E_INVALID_VERSION" $".nvmrc contains ($v), which is not a valid version string"
   }
   $v
 }
