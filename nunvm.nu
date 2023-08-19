@@ -112,7 +112,7 @@ def _nunvm_get_os [] {
 
 # get architecture
 def _nunvm_get_arch [] {
-  let host_arch: string = ($env.nunvm_ARCH? | default ($nu.os-info | get arch | str downcase))
+  let host_arch: string = ($env.NUNVM_ARCH? | default ($nu.os-info | get arch | str downcase))
   #FIXME: this is wanky, need to check i*86, not i86
   match $host_arch {
     "x86_64" | "amd64" => "x64",
