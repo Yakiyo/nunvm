@@ -1,4 +1,11 @@
-#!/usr/bin/env nu
+# nunvm - Nushell Node Version Manager
+# Implementing nvm in nushell
+#
+# To use, source this file in your config.nu file
+# For using with non-nushell shells, create a separate 
+# script file which invokes it with nu
+#
+# Copyright 2023 Yakiyo. All rights reserved. MIT license.
 
 use std log
 
