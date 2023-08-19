@@ -15,12 +15,14 @@ const nunvm_version = "0.1.0"
 # Nodejs dist url
 const node_dist = "https://nodejs.org/dist"
 
-# Entry point
+# Nodejs version manager in nushell
+#
+# https://github.com/Yakiyo/nunvm
 def nunvm [
   --version(-v) # Display current nunvm version
 ] {
   if $version {
-    print $nunvm_version
+    print $"v($nunvm_version)"
     return
   }
   help nunvm
@@ -32,6 +34,7 @@ def "nunvm install" [
   --lts # Install lts version
   --latest # Install latest version
 ] {
+  # resolve version
   mut v = ""
   if $version == null and $lts == false and $latest == true {
     $v = (_nunvm_get_latest)
@@ -50,6 +53,7 @@ def "nunvm install" [
   } else {
     _nunvm_throw "Only one of `version`, `--lts` and `--latest` must be used at a time"
   }
+
   let version = $v
   let url = _nunvm_make_url $version
   let archive_path = (_nunvm_home | path join $"(_nunvm_file_name $version)")
@@ -71,6 +75,20 @@ def "nunvm install" [
     log error "Unable to delete archive file due to unexpected reasons. Please do it manually"
   }
   print $"Successfully installed nodejs (ansi blue)($version)(ansi reset)"
+}
+
+# Uninstall a nodejs version
+def "nunvm uninstall" [version: string] {
+  if not (_nunvm_is_valid_version $version) {
+    _nunvm_throw $"($version) is not a valid version string"
+  }
+  let version = (_nunvm_prepend_version $version)
+  let p = (_nunvm_installations | path join $version)
+  if not ($p | path exists) {
+    _nunvm_throw $"($version) is not installed. Cannot uninstall it"
+  }
+  try { rm -rf $p } catch { _nunvm_throw "Unable to remove installated version" }
+  print "Succesfully removed installation"
 }
 
 # View version of currently active nodejs
