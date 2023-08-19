@@ -55,21 +55,23 @@ def "nunvm install" [
   }
 
   let version = $v
-  let url = _nunvm_make_url $version
-  let archive_path = (_nunvm_home | path join $"(_nunvm_file_name $version)")
   let version_path = (_nunvm_installations | path join $version)
   if ($version_path | path exists) {
     _nunvm_throw "E_EXISTING_VERSION" $"Nodejs version ($version) already exists. Consider uninstalling it before installing it again"
   }
+  let url = _nunvm_make_url $version
+  let archive_path = ($nu.temp-path | path join (_nunvm_file_name $version))
+  log debug $archive_path
+
   log info $"Downloading archive from ($url)"
   log info $"Saving file to ($archive_path)"
   http get -r $url | save -r -f -p $archive_path
 
   log info "Extracting file from archive"
   _nunvm_unarchive $archive_path (_nunvm_installations)
-  print (_nunvm_installations | path join (_nunvm_file_name $version))
-  print (_nunvm_installations | path join $version)
-  mv (_nunvm_installations | path join (_nunvm_file_name $version)) (_nunvm_installations | path join $version)
+  let ext_less_file_name = ((_nunvm_file_name $version) | str replace '\.zip|\.tar\.gz' '')
+  let archived_dir = (_nunvm_installations | path join $ext_less_file_name)
+  mv $archived_dir (_nunvm_installations | path join $version)
 
   log info "Removing archive file"
   try { 
