@@ -18,18 +18,18 @@ const node_dist = "https://nodejs.org/dist"
 # Nodejs version manager in nushell
 #
 # https://github.com/Yakiyo/nunvm
-def nunvm [
+def main [
   --version(-v) # Display current nunvm version
 ] {
   if $version {
     print $"v($nunvm_version)"
     return
   }
-  help nunvm
+  help main
 }
 
 # Install a version of nodejs
-def "nunvm install" [
+def "main install" [
   version?: string # The version to install
   --lts            # Install lts version
   --latest         # Install latest version
@@ -83,7 +83,7 @@ def "nunvm install" [
 }
 
 # Uninstall a nodejs version
-def "nunvm uninstall" [
+def "main uninstall" [
   version: string # Version to uninstall
   ] {
   if not (_nunvm_is_valid_version $version) {
@@ -107,7 +107,7 @@ def "nunvm current" [] {
   }
 }
 # View all installed versions of nodejs
-def "nunvm ls" [] {
+def "main ls" [] {
   let installations = _nunvm_installations
   if not ($installations | path exists) {
     print "No version of nodejs installed"
@@ -122,7 +122,7 @@ def "nunvm ls-remote" [] {
 }
 
 # Create an alias
-def "nunvm alias" [
+def "main alias" [
   version: string # The version to alias
   alias: string   # Alias name
 ] {
