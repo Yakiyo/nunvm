@@ -124,7 +124,7 @@ def "main ls-remote" [] {
   http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| _nunvm_fmt_version $it }
 }
 
-# Create an alias
+# Create an alias (unfinished)
 def "main alias" [
   version: string # The version to alias
   alias: string   # Alias name
@@ -136,9 +136,11 @@ def "main alias" [
   if not (_nunvm_installations | path join $version | path exists) {
     _nunvm_throw "E_VERSION_NOT_INSTALLED" $"($version) is not installed. Cannot alias to it"
   }
-  let alias_map = (_nunvm_alias | open)
-  print $alias_map
-  # let aliases = (get $alias_map.($version))
+  # this is a map of version as value and alias as it's key
+  let aliases = _nunvm_alias
+  let aliases = ($aliases | upsert $alias $version)
+  $aliases | to json -i 4 | save -f (_nunvm_alias_file)
+  print "Created new alias"
 }
 
 # format a version string
@@ -223,16 +225,22 @@ def _nunvm_current [] {
   $env.NUNVM_CURRENT? | default (_nunvm_home | path join "current")
 }
 
+def _nunvm_alias_file [] {
+  [(_nunvm_home) "alias.json"] | path join
+}
+
 # json file containing info about aliases
 def _nunvm_alias [] {
-  let p = ([(_nunvm_home) "alias.json"] | path join)
+  let p = (_nunvm_alias_file)
   # Create parent dir first
   let dir = ($p | path dirname)
   mkdir $dir
-  # then create file
-  touch $p
-  "[]" | save -f $p
-  $p
+  if not ($p | path exists) {
+    log info "Missing alias file. Creating it"
+    "{}" | save -f $p
+  }
+  # handle case when file exists, but is empty
+  open $p | default {}
 }
 
 # unarchive zip files using platform specific tools
