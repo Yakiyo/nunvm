@@ -143,6 +143,12 @@ def "main alias" [
   print "Created new alias"
 }
 
+def "main unalias" [
+  alias: string # the alias to remove
+] {
+  _nunvm_alias | upsert $alias null | to json -i 4 | save -f (_nunvm_alias_file)
+}
+
 # format a version string
 def _nunvm_fmt_version [it] {
   mut s: string = $it.version
