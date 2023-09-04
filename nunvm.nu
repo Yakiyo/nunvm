@@ -109,6 +109,30 @@ def "main current" [] {
     node -v
   }
 }
+
+# Use an installed version
+def "main use" [
+  version: string # the version to use (alias not supported yet)
+] {
+  if not (_nunvm_is_valid_version $version) {
+    _nunvm_throw "E_INVALID_VERSION" $"($version) is not a valid version string"
+  }
+  let version = (_nunvm_prepend_version $version)
+  let src = (_nunvm_installations | path join $version)
+  if not ($src | path exists) {
+    _nunvm_throw "E_VERSION_NOT_INSTALLED" $"($version) is not installed. Cannot uninstall it"
+  }
+  let dest = (_nunvm_current)
+  log info $"Symlinking ($src) to ($dest)"
+  _nunvm_symln $src $dest
+  print $"Successfully set ($version) as current"
+}
+
+# Show the currently used path value
+def "main path" [] {
+  _nunvm_current
+}
+
 # View all installed versions of nodejs
 def "main ls" [] {
   let installations = _nunvm_installations
@@ -293,7 +317,9 @@ def _nunvm_symln [
 ] {
   match $"(_nunvm_get_os)" {
     "windows" => {
-      rm -rf $dest # delete dest just to be on the safe side
+      if ($dest | path exists) {
+        rm $dest
+      }
       mklink /d $dest $src
     }
     _ => {
