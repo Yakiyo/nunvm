@@ -124,7 +124,7 @@ def "main ls-remote" [] {
   http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| _nunvm_fmt_version $it }
 }
 
-# Create an alias (unfinished)
+# Create an alias 
 def "main alias" [
   version: string # The version to alias
   alias: string   # Alias name
@@ -143,6 +143,7 @@ def "main alias" [
   print "Created new alias"
 }
 
+# Remove an alias
 def "main unalias" [
   alias: string # the alias to remove
 ] {
