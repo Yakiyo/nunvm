@@ -9,7 +9,7 @@
 
 use std log
 
-(_set_log_level)
+(_nunvm_set_log_level)
 # nunvm version
 const nunvm_version = "0.1.0" 
 
@@ -269,8 +269,26 @@ def _nunvm_get_latest [] {
   http get 'https://nodejs.org/dist/index.json' | get 0.version 
 }
 
+# create symlinks. Use `mklink` on windows, otherwise use `ln`
+# mklink: https://learn.microsoft.com/windows-server/administration/windows-commands/mklink
+# ln: https://www.gnu.org/software/coreutils/ln
+def _nunvm_symln [
+  src: string # the original directory
+  dest: string # the path to create symlink at
+] {
+  match $"(_nunvm_get_os)" {
+    "windows" => {
+      rm -rf $dest # delete dest just to be on the safe side
+      mklink /d $dest $src
+    }
+    _ => {
+      ln -sf $src $dest
+    }
+  }
+}
+
 # Read `$env.NUNVM_LOG` and set it to `$env.NU_LOG_LEVEL`
-def-env _set_log_level [] {
+def-env _nunvm_set_log_level [] {
   let nunvm_log = $env.NUNVM_LOG?
   if $nunvm_log != null {
     $env.NU_LOG_LEVEL = $nunvm_log
