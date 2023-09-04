@@ -69,11 +69,11 @@ def "main install" [
   log info $"Downloading archive from ($url)"
   log info $"Saving file to ($archive_path)"
   http get -r $url | save -r -f -p $archive_path
-
   log info "Extracting file from archive"
   _nunvm_unarchive $archive_path (_nunvm_installations)
-  let ext_less_file_name = ((_nunvm_file_name $version) | str replace '\.zip|\.tar\.gz' '')
+  let ext_less_file_name = ((_nunvm_file_name $version) | str replace -r '.zip|.tar|.gz' '')
   let archived_dir = (_nunvm_installations | path join $ext_less_file_name)
+  log debug $"Unarchived directory in ($archived_dir)"
   mv $archived_dir (_nunvm_installations | path join $version)
 
   log info "Removing archive file"
