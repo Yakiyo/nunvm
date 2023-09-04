@@ -9,6 +9,7 @@
 
 use std log
 
+(_set_log_level)
 # nunvm version
 const nunvm_version = "0.1.0" 
 
@@ -266,4 +267,12 @@ def _nunvm_get_lts [] {
 # Get latest version
 def _nunvm_get_latest [] {
   http get 'https://nodejs.org/dist/index.json' | get 0.version 
+}
+
+# Read `$env.NUNVM_LOG` and set it to `$env.NU_LOG_LEVEL`
+def-env _set_log_level [] {
+  let nunvm_log = $env.NUNVM_LOG?
+  if $nunvm_log != null {
+    $env.NU_LOG_LEVEL = $nunvm_log
+  }
 }
