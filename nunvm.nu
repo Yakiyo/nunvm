@@ -35,26 +35,28 @@ def "main install" [
   --latest         # Install latest version
 ] {
   # resolve version
-  mut v = ""
-  if $version == null and $lts == false and $latest == true {
-    $v = (_nunvm_get_latest)
+  let version: string = if $version == null and $lts == false and $latest == true {
+    let v = (_nunvm_get_latest)
     log info $"Resolving version latest to (ansi blue)($v)(ansi reset)"
+    $v
   } else if $version == null and $lts == true and $latest == false {
-    $v = (_nunvm_get_lts)
+    let v = (_nunvm_get_lts)
     log info $"Resolving version lts to (ansi blue)($v)(ansi reset)"
+    $v
   } else if $version != null and $lts == false and $latest == false {
     if not (_nunvm_is_valid_version $version) {
       _nunvm_throw "E_INVALID_VERSION" $"($version) is not a valid string"
     }
-    $v = (_nunvm_prepend_version $"($version)")
+    let v = (_nunvm_prepend_version $"($version)")
+    $v
   } else if ([$env.PWD ".nvmrc"] | path join | path exists) {
-    $v = (_nunvm_read_rc)
+    let v = (_nunvm_read_rc)
     log info $"Using version (ansi blue)($v)(ansi reset) from .nvmrc"
+    $v
   } else {
     _nunvm_throw "E_TOO_MANY_ARGS" "Only one of `version`, `--lts` and `--latest` must be used at a time"
   }
 
-  let version = $v
   let version_path = (_nunvm_installations | path join $version)
   if ($version_path | path exists) {
     _nunvm_throw "E_EXISTING_VERSION" $"Nodejs version ($version) already exists. Consider uninstalling it before installing it again"
@@ -99,7 +101,7 @@ def "main uninstall" [
 }
 
 # View version of currently active nodejs
-def "nunvm current" [] {
+def "main current" [] {
   if (which "node" | is-empty) {
     print "No version of nodejs currently active"
   } else {
@@ -117,7 +119,7 @@ def "main ls" [] {
 }
 
 # View all available versions of nodejs
-def "nunvm ls-remote" [] {
+def "main ls-remote" [] {
   http get 'https://nodejs.org/dist/index.json' | reverse | each { |it| _nunvm_fmt_version $it }
 }
 
