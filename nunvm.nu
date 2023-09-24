@@ -1,3 +1,5 @@
+#!/usr/bin/env nu
+
 # nunvm - Nushell Node Version Manager
 # Implementing nvm in nushell
 #
